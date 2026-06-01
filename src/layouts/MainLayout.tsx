@@ -9,9 +9,9 @@ const MainLayout = () => {
   return (
     <Layout>
       <Sidebar />
-      <Layout>
+      <Layout className="bg-stone-50">
         <Header />
-        <Content className="bg-white p-4 rounded-lg ">
+        <Content className="bg-white rounded-xl m-2">
           <Outlet />
         </Content>
       </Layout>

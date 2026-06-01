@@ -26,9 +26,9 @@ const items: MenuItem[] = [
 
 const Sidebar = () => {
   return (
-    <Sider className="bg-stone-100">
+    <Sider className="bg-stone-50">
       <Menu
-        className="h-full bg-stone-100 border-none"
+        className="h-full bg-stone-50 border-none"
         defaultSelectedKeys={["1"]}
         defaultOpenKeys={["sub1"]}
         mode="inline"
