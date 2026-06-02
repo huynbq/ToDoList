@@ -1,0 +1,9 @@
+export type Todo = {
+  id: string;
+  title: string;
+  description: string;
+  status: "pending" | "completed";
+  dueDateTime: string;
+  startDateTime: string;
+  color: string;
+};
