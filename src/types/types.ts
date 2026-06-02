@@ -8,3 +8,7 @@ export type Todo = {
   color: string;
   order: number;
 };
+
+export type TodoPage = {
+  data: Todo[];
+};

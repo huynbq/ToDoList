@@ -1,6 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "../constants/api";
-import type { Todo } from "../types/types";
+import type { Todo, TodoPage } from "../types/types";
 
 export const getTodos = async ({
   limit = 10,
@@ -8,8 +8,8 @@ export const getTodos = async ({
 }: {
   limit?: number;
   offset?: number;
-}): Promise<Todo[]> => {
-  const { data } = await axios.get<Todo[]>(BASE_URL + "/todos", {
+}): Promise<TodoPage> => {
+  const { data } = await axios.get<TodoPage>(BASE_URL + "/todos", {
     params: {
       limit,
       offset,
