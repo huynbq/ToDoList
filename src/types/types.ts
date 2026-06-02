@@ -11,4 +11,5 @@ export type Todo = {
 
 export type TodoPage = {
   data: Todo[];
+  nextOffset?: number | null;
 };
