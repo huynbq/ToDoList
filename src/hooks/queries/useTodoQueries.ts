@@ -14,7 +14,7 @@ export const useGetTodos = () => {
     initialPageParam: 0,
     queryFn: ({ pageParam }) => todoApi.getTodos({ limit, offset: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < limit) return undefined;
+      if (lastPage.data.length < limit) return undefined;
 
       return allPages.length * limit;
     },
@@ -71,11 +71,8 @@ export const useEditOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: todoApi.editOrder,
-    onSuccess: (_, varibles) => {
-      queryClient.invalidateQueries({ queryKey: TODO_KEYS.all });
-      queryClient.invalidateQueries({
-        queryKey: TODO_KEYS.detail(varibles.id),
-      });
+    onSuccess: (todo) => {
+      queryClient.setQueryData(TODO_KEYS.detail(todo.id), todo);
     },
   });
 };
