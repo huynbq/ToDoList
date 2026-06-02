@@ -6,4 +6,5 @@ export type Todo = {
   dueDateTime: string;
   startDateTime: string;
   color: string;
+  order: number;
 };

@@ -66,3 +66,16 @@ export const useDeleteTodo = () => {
     },
   });
 };
+
+export const useEditOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: todoApi.editOrder,
+    onSuccess: (_, varibles) => {
+      queryClient.invalidateQueries({ queryKey: TODO_KEYS.all });
+      queryClient.invalidateQueries({
+        queryKey: TODO_KEYS.detail(varibles.id),
+      });
+    },
+  });
+};

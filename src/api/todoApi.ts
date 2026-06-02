@@ -42,3 +42,16 @@ export const toggleStatus = async (id: string): Promise<Todo> => {
   );
   return data;
 };
+
+export const editOrder = async ({
+  id,
+  order,
+}: {
+  id: string;
+  order: number;
+}): Promise<Todo> => {
+  const { data } = await axios.patch<Todo>(`${BASE_URL}/todos/${id}/order`, {
+    order: order,
+  });
+  return data;
+};
