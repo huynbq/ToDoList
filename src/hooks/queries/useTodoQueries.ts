@@ -6,14 +6,25 @@ import {
 import { TODO_KEYS } from "../../constants/queryKeys";
 import * as todoApi from "../../api/todoApi";
 
-export const useGetTodos = () => {
+export const useGetTodos = ({
+  search,
+  status,
+}: {
+  search: string;
+  status: "all" | "completed" | "pending";
+}) => {
   const limit = 10;
 
   return useInfiniteQuery({
-    queryKey: TODO_KEYS.all,
+    queryKey: TODO_KEYS.list({ search, status }),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => todoApi.getTodos({ limit, offset: pageParam }),
+    queryFn: ({ pageParam }) =>
+      todoApi.getTodos({ limit, offset: pageParam, search, status }),
     getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.nextOffset !== null && lastPage.nextOffset !== undefined) {
+        return lastPage.nextOffset;
+      }
+
       if (lastPage.data.length < limit) return undefined;
 
       return allPages.length * limit;

@@ -5,8 +5,10 @@ import TodoCard from "../TodoCard";
 import { useEditOrder, useGetTodos } from "../../hooks/queries/useTodoQueries";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Todo } from "../../types/types";
-const TodoList = () => {
-  const [filter, setFilter] = useState("all");
+type TodoStatusFilter = "all" | "completed" | "pending";
+
+const TodoList = ({ search }: { search: string }) => {
+  const [filter, setFilter] = useState<TodoStatusFilter>("all");
   const [view, setView] = useState("card");
 
   const {
@@ -16,7 +18,7 @@ const TodoList = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useGetTodos();
+  } = useGetTodos({ search, status: filter });
 
   const todos = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
   const [items, setItems] = useState(todos);
@@ -155,7 +157,7 @@ const TodoList = () => {
           ]}
           value={filter}
           onChange={(value) => {
-            setFilter(value);
+            setFilter(value as TodoStatusFilter);
           }}
         />
         <Segmented

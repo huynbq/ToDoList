@@ -5,14 +5,20 @@ import type { Todo, TodoPage } from "../types/types";
 export const getTodos = async ({
   limit = 10,
   offset = 0,
+  search = "",
+  status = "all",
 }: {
   limit?: number;
   offset?: number;
+  search?: string;
+  status?: "all" | "completed" | "pending";
 }): Promise<TodoPage> => {
   const { data } = await axios.get<TodoPage>(BASE_URL + "/todos", {
     params: {
       limit,
       offset,
+      search,
+      status,
     },
   });
   return data;
