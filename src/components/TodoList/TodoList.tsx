@@ -1,10 +1,13 @@
-import { Button, Col, Flex, Row, Segmented, Space } from "antd";
+import { Flex, Segmented, Space } from "antd";
 import { AppstoreOutlined, BarsOutlined } from "@ant-design/icons";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TodoCard from "../TodoCard";
-import { useGetTodos } from "../../hooks/queries/useTodoQueries";
+import { useEditOrder, useGetTodos } from "../../hooks/queries/useTodoQueries";
 import { useVirtualizer } from "@tanstack/react-virtual";
-
+import { DragDropProvider } from "@dnd-kit/react";
+import { isSortableOperation, useSortable } from "@dnd-kit/react/sortable";
+import type { Todo } from "../../types/types";
+import { closestCenter } from "@dnd-kit/collision";
 const TodoList = () => {
   const [filter, setFilter] = useState("all");
   const [view, setView] = useState("card");
@@ -18,10 +21,15 @@ const TodoList = () => {
     isFetchingNextPage,
   } = useGetTodos();
 
-  const todos = data?.pages.flatMap((page) => page.data) ?? [];
+  const todos = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
+  const [items, setItems] = useState(todos);
+  const renderedItems = items.length === todos.length ? items : todos;
+  const editOrder = useEditOrder();
 
   const parentRef = useRef<HTMLDivElement>(null);
-
   const todoVitualizer = useVirtualizer({
     count: hasNextPage ? todos.length + 1 : todos.length,
     getScrollElement: () => parentRef.current,
@@ -30,8 +38,11 @@ const TodoList = () => {
   });
 
   useEffect(() => {
-    const [lastItem] = [...todoVitualizer.getVirtualItems()].reverse();
+    setItems(todos);
+  }, [todos]);
 
+  useEffect(() => {
+    const [lastItem] = [...todoVitualizer.getVirtualItems()].reverse();
     if (!lastItem) {
       return;
     }
@@ -59,6 +70,72 @@ const TodoList = () => {
     return <p className="p-4 text-red-500">Failed to load todos.</p>;
   }
 
+  const Sortable = ({
+    id,
+    index,
+    size,
+    start,
+    isLoader,
+    todo,
+  }: {
+    id: string;
+    index: number;
+    size: number;
+    start: number;
+    isLoader: boolean;
+    todo: Todo;
+  }) => {
+    const { ref } = useSortable({
+      id,
+      index,
+      collisionDetector: closestCenter,
+    });
+
+    return (
+      <div
+        ref={ref}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: `${size}px`,
+          transform: `translateY(${start}px)`,
+        }}
+      >
+        {isLoader ? (
+          hasNextPage ? (
+            "Loading more..."
+          ) : (
+            "Nothing more to load"
+          )
+        ) : (
+          <TodoCard todo={todo} />
+        )}
+      </div>
+    );
+  };
+  // function handleDragEnd(event: DragEndEvent) {
+  //   const { active, over } = event;
+
+  //   if (!over || active.id === over.id) {
+  //     return;
+  //   }
+
+  //   const activeTodo = todos.find(
+  //     (todo) => String(todo.id) === String(active.id),
+  //   );
+  //   const overTodo = todos.find((todo) => String(todo.id) === String(over.id));
+
+  //   if (!activeTodo || !overTodo) {
+  //     return;
+  //   }
+
+  //   updateTodoOrder.mutate({
+  //     id: activeTodo.id,
+  //     order: overTodo.order,
+  //   });
+  // }
   return (
     <Space vertical className="p-4">
       <Flex justify="space-between" align="center">
@@ -84,51 +161,75 @@ const TodoList = () => {
           }}
         />
       </Flex>
-      <div
-        ref={parentRef}
-        style={{
-          height: "550px",
-          width: "100%",
-          overflow: "auto",
+      <DragDropProvider
+        onDragEnd={(event) => {
+          const { operation } = event;
+
+          if (isSortableOperation(operation)) {
+            const { source } = operation;
+
+            if (!source) {
+              return;
+            }
+
+            const sourceTodo = renderedItems[source.initialIndex];
+            const targetTodo = renderedItems[source.index];
+
+            if (!sourceTodo || !targetTodo || sourceTodo.id === targetTodo.id) {
+              return;
+            }
+
+            console.log(sourceTodo.id, targetTodo.order);
+            editOrder.mutate({
+              id: sourceTodo.id,
+              order: targetTodo.order,
+            });
+          }
         }}
       >
         <div
           style={{
-            height: `${todoVitualizer.getTotalSize()}px`,
+            height: "550px",
             width: "100%",
-            position: "relative",
+            overflow: "auto",
           }}
+          ref={parentRef}
         >
-          {todoVitualizer.getVirtualItems().map((virtualItem) => {
-            const isLoader = virtualItem.index > todos.length - 1;
-            const todo = todos[virtualItem.index];
+          <div
+            style={{
+              height: `${todoVitualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {todoVitualizer.getVirtualItems().map((virtualItem) => {
+              const isLoader = virtualItem.index > todos.length - 1;
+              const todo = renderedItems[virtualItem.index];
 
-            return (
-              <div
-                key={virtualItem.index}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: `${virtualItem.size}px`,
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                {isLoader ? (
-                  hasNextPage ? (
-                    "Loading more..."
-                  ) : (
-                    "Nothing more to load"
-                  )
+              if (!isLoader && !todo) {
+                return null;
+              }
+
+              return isLoader ? (
+                hasNextPage ? (
+                  "Loading more..."
                 ) : (
-                  <TodoCard todo={todo} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-        {/* <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }} ref={parentRef}>
+                  "Nothing more to load"
+                )
+              ) : (
+                <Sortable
+                  key={todo.id}
+                  isLoader={isLoader}
+                  id={todo.id}
+                  index={virtualItem.index}
+                  todo={todo}
+                  size={virtualItem.size}
+                  start={virtualItem.start}
+                />
+              );
+            })}
+          </div>
+          {/* <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }} ref={parentRef}>
           {todos.map((todo) => (
             <Col
               key={todo.id}
@@ -143,7 +244,8 @@ const TodoList = () => {
             </Col>
           ))}
         </Row> */}
-      </div>
+        </div>
+      </DragDropProvider>
       {/* {hasNextPage && (
         <Button
           loading={isFetchingNextPage}

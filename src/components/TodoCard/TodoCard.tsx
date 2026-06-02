@@ -3,7 +3,6 @@ import { Card, Checkbox, Flex, Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { formatDateTime } from "../../utils/format";
 import type { Todo } from "../../types/types";
-import { memo } from "react";
 
 type TodoCardProps = {
   todo: Todo;
@@ -45,7 +44,7 @@ const CardActions = () => {
   );
 };
 
-const TodoCard =  ({ todo }: TodoCardProps) => {
+const TodoCard = ({ todo }: TodoCardProps) => {
   return (
     <Card
       classNames={{
