@@ -1,7 +1,5 @@
 import { Empty, Flex, Segmented, Skeleton, Spin } from "antd";
 import {
-  AppstoreOutlined,
-  BarsOutlined,
   HolderOutlined,
 } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,9 +16,8 @@ const TodoList = ({
 }: {
   search: string;
   onEditTodo: (todo: Todo) => void;
-}) => {
+  }) => {
   const [filter, setFilter] = useState<TodoStatusFilter>("all");
-  const [view, setView] = useState("card");
 
   const {
     data,
@@ -291,7 +288,7 @@ const TodoList = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-4">
-      <Flex justify="space-between" align="center" className="shrink-0">
+      <Flex align="center" className="shrink-0">
         <Segmented
           options={[
             { label: "All Tasks", value: "all" },
@@ -302,16 +299,6 @@ const TodoList = ({
           value={filter}
           onChange={(value) => {
             setFilter(value as TodoStatusFilter);
-          }}
-        />
-        <Segmented
-          options={[
-            { value: "card", icon: <AppstoreOutlined /> },
-            { value: "list", icon: <BarsOutlined /> },
-          ]}
-          value={view}
-          onChange={(value) => {
-            setView(value);
           }}
         />
       </Flex>
