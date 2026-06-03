@@ -1,8 +1,12 @@
+export type TodoStatus = "pending" | "overdue" | "completed";
+export type TodoWriteStatus = "pending" | "completed";
+export type TodoStatusFilter = "all" | TodoStatus;
+
 export type Todo = {
   id: string;
   title: string;
   description: string;
-  status: "pending" | "completed";
+  status: TodoStatus;
   dueDateTime: string;
   startDateTime: string;
   reminderDateTime: string | null;
@@ -17,8 +21,9 @@ export type TodoPage = {
   nextOffset?: number | null;
 };
 
-export type TodoCreateRequest = Omit<Todo, "id" | "order" | "reminderSent" | "reminderSentAt"> & {
+export type TodoCreateRequest = Omit<Todo, "id" | "order" | "status" | "reminderSent" | "reminderSentAt"> & {
   order?: number;
+  status: TodoWriteStatus;
 };
 
 export type TodoUpdateRequest = TodoCreateRequest & {

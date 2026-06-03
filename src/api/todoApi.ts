@@ -1,5 +1,5 @@
 import { apiClient } from "./http";
-import type { Todo, TodoCreateRequest, TodoPage, TodoResponse, TodoUpdateRequest } from "../types/types";
+import type { Todo, TodoCreateRequest, TodoPage, TodoResponse, TodoStatusFilter, TodoUpdateRequest } from "../types/types";
 
 export const getTodos = async ({
   limit = 10,
@@ -10,7 +10,7 @@ export const getTodos = async ({
   limit?: number;
   offset?: number;
   search?: string;
-  status?: "all" | "completed" | "pending";
+  status?: TodoStatusFilter;
 }): Promise<TodoPage> => {
   const { data } = await apiClient.get<TodoPage>("/todos", {
     params: {
