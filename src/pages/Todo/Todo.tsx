@@ -127,11 +127,11 @@ const TodoPage = () => {
         }}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input />
+          <Form.Item name="title" label="Title" rules={[{ required: true }]}> 
+            <Input placeholder="Enter task title" />
           </Form.Item>
-          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}> 
+            <Input.TextArea rows={3} placeholder="Enter task description" />
           </Form.Item>
           {editingTodo ? (
             <Form.Item name="status" label="Status" rules={[{ required: true }]}>
