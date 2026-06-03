@@ -7,11 +7,11 @@ import Sidebar from "../components/Sidebar";
 const { Content } = Layout;
 const MainLayout = () => {
   return (
-    <Layout>
+    <Layout className="h-svh overflow-hidden">
       <Sidebar />
-      <Layout className="bg-stone-50">
+      <Layout className="bg-stone-50 min-w-0">
         <Header />
-        <Content className="bg-white rounded-xl m-2">
+        <Content className="bg-white rounded-xl m-2 min-h-0 overflow-hidden">
           <Outlet />
         </Content>
       </Layout>
