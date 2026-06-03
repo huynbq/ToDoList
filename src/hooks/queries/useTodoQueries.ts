@@ -9,7 +9,15 @@ import { useCallback } from "react";
 import { NOTIFICATION_KEYS, TODO_KEYS } from "../../constants/queryKeys";
 import * as notificationApi from "../../api/notificationApi";
 import * as todoApi from "../../api/todoApi";
-import type { ReminderNotification, TodoPage } from "../../types/types";
+import type { ReminderNotification, TodoPage, TodoStatus, TodoStatusFilter } from "../../types/types";
+
+const statusAfterToggle = (todo: { status: TodoStatus; dueDateTime: string }) => {
+  if (todo.status !== "completed") {
+    return "completed";
+  }
+
+  return new Date(todo.dueDateTime).getTime() <= Date.now() ? "overdue" : "pending";
+};
 
 const isTodoListQuery = (queryKey: readonly unknown[]) => {
   const params = queryKey[1];
@@ -28,7 +36,7 @@ export const useGetTodos = ({
   status,
 }: {
   search: string;
-  status: "all" | "completed" | "pending";
+  status: TodoStatusFilter;
 }) => {
   const limit = 10;
 
@@ -102,7 +110,7 @@ export const useToggleStatus = () => {
                 todo.id === id
                   ? {
                       ...todo,
-                      status: todo.status === "completed" ? "pending" : "completed",
+                      status: statusAfterToggle(todo),
                     }
                   : todo,
               ),
