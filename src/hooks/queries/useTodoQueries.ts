@@ -2,11 +2,14 @@ import {
   type InfiniteData,
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { TODO_KEYS } from "../../constants/queryKeys";
+import { useCallback } from "react";
+import { NOTIFICATION_KEYS, TODO_KEYS } from "../../constants/queryKeys";
+import * as notificationApi from "../../api/notificationApi";
 import * as todoApi from "../../api/todoApi";
-import type { TodoPage } from "../../types/types";
+import type { ReminderNotification, TodoPage } from "../../types/types";
 
 const isTodoListQuery = (queryKey: readonly unknown[]) => {
   const params = queryKey[1];
@@ -125,6 +128,41 @@ export const useToggleStatus = () => {
       });
     },
   });
+};
+
+export const useUnreadNotifications = () => {
+  return useQuery({
+    queryKey: NOTIFICATION_KEYS.unread,
+    queryFn: notificationApi.getUnreadNotifications,
+  });
+};
+
+export const useMarkNotificationRead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: notificationApi.markNotificationRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.unread });
+    },
+  });
+};
+
+export const useAddRealtimeNotification = () => {
+  const queryClient = useQueryClient();
+
+  return useCallback((notification: ReminderNotification) => {
+    queryClient.setQueryData<ReminderNotification[]>(NOTIFICATION_KEYS.unread, (current) => {
+      if (!current) {
+        return [notification];
+      }
+
+      if (current.some((item) => item.id === notification.id)) {
+        return current;
+      }
+
+      return [notification, ...current];
+    });
+  }, [queryClient]);
 };
 
 export const useDeleteTodo = () => {

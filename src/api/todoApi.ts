@@ -1,6 +1,5 @@
-import axios from "axios";
-import { BASE_URL } from "../constants/api";
-import type { Todo, TodoCreateRequest, TodoPage, TodoResponse } from "../types/types";
+import { apiClient } from "./http";
+import type { Todo, TodoCreateRequest, TodoPage, TodoResponse, TodoUpdateRequest } from "../types/types";
 
 export const getTodos = async ({
   limit = 10,
@@ -13,7 +12,7 @@ export const getTodos = async ({
   search?: string;
   status?: "all" | "completed" | "pending";
 }): Promise<TodoPage> => {
-  const { data } = await axios.get<TodoPage>(BASE_URL + "/todos", {
+  const { data } = await apiClient.get<TodoPage>("/todos", {
     params: {
       limit,
       offset,
@@ -25,26 +24,26 @@ export const getTodos = async ({
 };
 
 export const createTodo = async (newTodo: TodoCreateRequest): Promise<Todo> => {
-  const { data } = await axios.post<TodoResponse>(BASE_URL + "/todos", newTodo);
+  const { data } = await apiClient.post<TodoResponse>("/todos", newTodo);
   return data.data;
 };
 
-export const editTodo = async (editTodo: Todo): Promise<Todo> => {
-  const { data } = await axios.put<TodoResponse>(
-    `${BASE_URL}/todos/${editTodo.id}`,
+export const editTodo = async (editTodo: TodoUpdateRequest): Promise<Todo> => {
+  const { data } = await apiClient.put<TodoResponse>(
+    `/todos/${editTodo.id}`,
     editTodo,
   );
   return data.data;
 };
 
 export const deleteTodo = async (id: string): Promise<void> => {
-  const { data } = await axios.delete<void>(`${BASE_URL}/todos/${id}`);
+  const { data } = await apiClient.delete<void>(`/todos/${id}`);
   return data;
 };
 
 export const toggleStatus = async (id: string): Promise<Todo> => {
-  const { data } = await axios.patch<TodoResponse>(
-    `${BASE_URL}/todos/${id}/toggle-status`,
+  const { data } = await apiClient.patch<TodoResponse>(
+    `/todos/${id}/toggle-status`,
   );
   return data.data;
 };
@@ -58,7 +57,7 @@ export const editOrder = async ({
   previousId?: string | null;
   nextId?: string | null;
 }): Promise<Todo> => {
-  const { data } = await axios.patch<TodoResponse>(`${BASE_URL}/todos/${id}/reorder`, {
+  const { data } = await apiClient.patch<TodoResponse>(`/todos/${id}/reorder`, {
     previousId,
     nextId,
   });

@@ -1,5 +1,5 @@
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input, Space, Button, Flex, Modal, Form, Select, DatePicker } from "antd";
+import { Input, Space, Button, Flex, Modal, Form, Select, DatePicker, ColorPicker } from "antd";
 import TodoList from "../../components/TodoList";
 import { useEffect, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
@@ -12,6 +12,7 @@ type TodoFormValues = {
   status: "pending" | "completed";
   startDateTime: Dayjs;
   dueDateTime: Dayjs;
+  reminderDateTime?: Dayjs | null;
   color: string;
 };
 
@@ -42,6 +43,7 @@ const TodoPage = () => {
       status: "pending",
       startDateTime: dayjs(),
       dueDateTime: dayjs().add(1, "day"),
+      reminderDateTime: null,
       color: "#3b82f6",
     });
     setIsModalOpen(true);
@@ -55,6 +57,7 @@ const TodoPage = () => {
       status: todo.status,
       startDateTime: dayjs(todo.startDateTime),
       dueDateTime: dayjs(todo.dueDateTime),
+      reminderDateTime: todo.reminderDateTime ? dayjs(todo.reminderDateTime) : null,
       color: todo.color,
     });
     setIsModalOpen(true);
@@ -68,12 +71,13 @@ const TodoPage = () => {
       status: values.status,
       startDateTime: values.startDateTime.toISOString(),
       dueDateTime: values.dueDateTime.toISOString(),
+      reminderDateTime: values.reminderDateTime?.toISOString() ?? null,
       color: values.color,
       ...(editingTodo ? { order: editingTodo.order } : {}),
     };
 
     if (editingTodo) {
-      await editTodo.mutateAsync({ ...editingTodo, ...payload });
+      await editTodo.mutateAsync({ id: editingTodo.id, ...payload });
     } else {
       await createTodo.mutateAsync(payload);
     }
@@ -140,18 +144,19 @@ const TodoPage = () => {
           <Form.Item name="dueDateTime" label="Due" rules={[{ required: true }]}>
             <DatePicker showTime className="w-full" />
           </Form.Item>
-          <Form.Item name="color" label="Color" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { label: "Red", value: "#ef4444" },
-                { label: "Orange", value: "#f97316" },
-                { label: "Yellow", value: "#f59e0b" },
-                { label: "Green", value: "#22c55e" },
-                { label: "Teal", value: "#14b8a6" },
-                { label: "Blue", value: "#3b82f6" },
-                { label: "Purple", value: "#8b5cf6" },
-                { label: "Pink", value: "#ec4899" },
-              ]}
+          <Form.Item name="reminderDateTime" label="Reminder">
+            <DatePicker showTime allowClear className="w-full" />
+          </Form.Item>
+          <Form.Item
+            name="color"
+            label="Color"
+            rules={[{ required: true }]}
+            getValueFromEvent={(color) => color.toHexString()}
+          >
+            <ColorPicker
+              showText={(color) => color.toHexString()}
+              disabledAlpha
+              format="hex"
             />
           </Form.Item>
         </Form>

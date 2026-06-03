@@ -103,6 +103,11 @@ const TodoCard = ({ todo, onEdit }: TodoCardProps) => {
           {formatDateTime(todo.startDateTime)} to{" "}
           {formatDateTime(todo.dueDateTime)}
         </p>
+        {todo.reminderDateTime ? (
+          <p className="text-xs text-stone-700">
+            Reminder: {formatDateTime(todo.reminderDateTime)}
+          </p>
+        ) : null}
       </Flex>
     </Card>
   );

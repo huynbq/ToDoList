@@ -1,4 +1,4 @@
-import { Flex, Segmented } from "antd";
+import { Empty, Flex, Segmented, Skeleton, Spin } from "antd";
 import { AppstoreOutlined, BarsOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import TodoCard from "../TodoCard";
@@ -26,7 +26,10 @@ const TodoList = ({
     isFetchingNextPage,
   } = useGetTodos({ search, status: filter });
 
-  const todos = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
+  const todos = useMemo(
+    () => data?.pages.flatMap((page) => page.data) ?? [],
+    [data],
+  );
   const [items, setItems] = useState(todos);
   const renderedItems = items.length === todos.length ? items : todos;
   const editOrder = useEditOrder();
@@ -36,7 +39,7 @@ const TodoList = ({
   const todoVitualizer = useVirtualizer({
     count: hasNextPage ? todos.length + 1 : todos.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100,
+    estimateSize: () => 120,
     overscan: 10,
   });
 
@@ -64,14 +67,6 @@ const TodoList = ({
     isFetchingNextPage,
     todoVitualizer.getVirtualItems(),
   ]);
-
-  if (isPending) {
-    return <p className="p-4 flex-1 min-h-0">Loading todos...</p>;
-  }
-
-  if (error) {
-    return <p className="p-4 text-red-500 flex-1 min-h-0">Failed to load todos.</p>;
-  }
 
   const handleDragStart = (event: DragEvent<HTMLDivElement>, todo: Todo) => {
     draggedTodoIdRef.current = todo.id;
@@ -106,7 +101,8 @@ const TodoList = ({
     nextItems.splice(targetIndex, 0, movedTodo);
     const movedIndex = nextItems.findIndex((todo) => todo.id === sourceTodo.id);
     const previousTodo = movedIndex > 0 ? nextItems[movedIndex - 1] : null;
-    const nextTodo = movedIndex < nextItems.length - 1 ? nextItems[movedIndex + 1] : null;
+    const nextTodo =
+      movedIndex < nextItems.length - 1 ? nextItems[movedIndex + 1] : null;
 
     setItems(nextItems);
     draggedTodoIdRef.current = null;
@@ -181,36 +177,63 @@ const TodoList = ({
         />
       </Flex>
       <div className="min-h-0 flex-1 w-full overflow-auto" ref={parentRef}>
-        <div
-          className="w-full relative"
-          style={{ height: `${todoVitualizer.getTotalSize()}px` }}
-        >
-          {todoVitualizer.getVirtualItems().map((virtualItem) => {
-            const isLoader = virtualItem.index > todos.length - 1;
-            const todo = renderedItems[virtualItem.index];
-
-            if (isLoader) {
-              return (
-                <div key="loader">
-                  {hasNextPage ? "Loading more..." : "Nothing more to load"}
-                </div>
-              );
-            }
-
-            if (!todo) {
-              return null;
-            }
-
-            return (
-              <TodoRow
-                key={todo.id}
-                todo={todo}
-                size={virtualItem.size}
-                start={virtualItem.start}
+        {isPending ? (
+          <div className="space-y-3 p-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton.Node
+                key={index}
+                active
+                className="!h-24 !w-full !rounded-lg"
               />
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : error ? (
+          <p className="p-4 text-red-500">Failed to load todos.</p>
+        ) : todos.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <Empty
+              description={
+                search || filter !== "all"
+                  ? "No tasks match your filters"
+                  : "No tasks yet"
+              }
+            />
+          </div>
+        ) : (
+          <div
+            className="w-full relative"
+            style={{ height: `${todoVitualizer.getTotalSize()}px` }}
+          >
+            {todoVitualizer.getVirtualItems().map((virtualItem) => {
+              const isLoader = virtualItem.index > todos.length - 1;
+              const todo = renderedItems[virtualItem.index];
+
+              if (isLoader) {
+                return (
+                  <div
+                    key="loader"
+                    className="flex h-20 items-center justify-center"
+                  >
+                    {hasNextPage ? <Spin /> : null}
+                  </div>
+                );
+              }
+
+              if (!todo) {
+                return null;
+              }
+
+              return (
+                <TodoRow
+                  key={todo.id}
+                  todo={todo}
+                  size={virtualItem.size}
+                  start={virtualItem.start}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
