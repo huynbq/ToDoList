@@ -7,5 +7,5 @@ export const formatHour = (dateTime: string) => {
 
 export const formatDateTime = (dateTime: string) => {
   const date = dayjs(dateTime);
-  return date.format("YYYY-MM-DD HH:mm");
+  return date.format("HH:mm DD-MM-YYYY");
 };
