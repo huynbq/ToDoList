@@ -1,11 +1,16 @@
 import { EllipsisOutlined } from "@ant-design/icons";
-import { Card, Checkbox, Flex, Dropdown } from "antd";
+import { Card, Checkbox, Flex, Dropdown, Modal } from "antd";
 import type { MenuProps } from "antd";
 import { formatDateTime } from "../../utils/format";
 import type { Todo } from "../../types/types";
+import {
+  useDeleteTodo,
+  useToggleStatus,
+} from "../../hooks/queries/useTodoQueries";
 
 type TodoCardProps = {
   todo: Todo;
+  onEdit: (todo: Todo) => void;
 };
 
 const cardActions: MenuProps["items"] = [
@@ -20,31 +25,63 @@ const cardActions: MenuProps["items"] = [
   },
 ];
 
-const CardTitle = ({
-  title,
-  status,
-}: {
-  title: string;
-  status: "pending" | "completed";
-}) => {
+const CardTitle = ({ todo }: { todo: Todo }) => {
+  const toggleStatus = useToggleStatus();
+  const isCompleted = todo.status === "completed";
+
   return (
-    <Checkbox checked={status === "completed"}>
+    <Checkbox
+      checked={isCompleted}
+      disabled={toggleStatus.isPending}
+      onChange={(event) => {
+        event.stopPropagation();
+        toggleStatus.mutate(todo.id);
+      }}
+      onClick={(event) => event.stopPropagation()}
+    >
       <h3 className="text-md font-bold">
-        {status === "completed" ? <s>{title}</s> : title}
+        {isCompleted ? <s>{todo.title}</s> : todo.title}
       </h3>
     </Checkbox>
   );
 };
 
-const CardActions = () => {
+const CardActions = ({ todo, onEdit }: TodoCardProps) => {
+  const deleteTodo = useDeleteTodo();
+
+  const handleMenuClick: MenuProps["onClick"] = ({ key, domEvent }) => {
+    domEvent.stopPropagation();
+
+    if (key === "0") {
+      onEdit(todo);
+      return;
+    }
+
+    if (key === "1") {
+      Modal.confirm({
+        title: "Delete task?",
+        content: `This will delete "${todo.title}".`,
+        okText: "Delete",
+        okButtonProps: { danger: true },
+        onOk: () => deleteTodo.mutateAsync(todo.id),
+      });
+    }
+  };
+
   return (
-    <Dropdown menu={{ items: cardActions }} trigger={["click"]}>
-      <EllipsisOutlined className="text-lg font-bold" />
+    <Dropdown
+      menu={{ items: cardActions, onClick: handleMenuClick }}
+      trigger={["click"]}
+    >
+      <EllipsisOutlined
+        className="text-lg font-bold"
+        onClick={(event) => event.stopPropagation()}
+      />
     </Dropdown>
   );
 };
 
-const TodoCard = ({ todo }: TodoCardProps) => {
+const TodoCard = ({ todo, onEdit }: TodoCardProps) => {
   return (
     <Card
       classNames={{
@@ -58,8 +95,8 @@ const TodoCard = ({ todo }: TodoCardProps) => {
     >
       <Flex vertical gap={8}>
         <Flex justify="space-between" align="center">
-          <CardTitle title={todo.title} status={todo.status} />
-          <CardActions />
+          <CardTitle todo={todo} />
+          <CardActions todo={todo} onEdit={onEdit} />
         </Flex>
         <p className="text-sm text-stone-500">{todo.description}</p>
         <p className="text-sm text-stone-800 font-semibold">

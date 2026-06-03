@@ -1,4 +1,4 @@
-import { Flex, Segmented, Space } from "antd";
+import { Flex, Segmented } from "antd";
 import { AppstoreOutlined, BarsOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import TodoCard from "../TodoCard";
@@ -7,7 +7,13 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Todo } from "../../types/types";
 type TodoStatusFilter = "all" | "completed" | "pending";
 
-const TodoList = ({ search }: { search: string }) => {
+const TodoList = ({
+  search,
+  onEditTodo,
+}: {
+  search: string;
+  onEditTodo: (todo: Todo) => void;
+}) => {
   const [filter, setFilter] = useState<TodoStatusFilter>("all");
   const [view, setView] = useState("card");
 
@@ -60,11 +66,11 @@ const TodoList = ({ search }: { search: string }) => {
   ]);
 
   if (isPending) {
-    return <p className="p-4">Loading todos...</p>;
+    return <p className="p-4 flex-1 min-h-0">Loading todos...</p>;
   }
 
   if (error) {
-    return <p className="p-4 text-red-500">Failed to load todos.</p>;
+    return <p className="p-4 text-red-500 flex-1 min-h-0">Failed to load todos.</p>;
   }
 
   const handleDragStart = (event: DragEvent<HTMLDivElement>, todo: Todo) => {
@@ -141,14 +147,14 @@ const TodoList = ({ search }: { search: string }) => {
           cursor: "grab",
         }}
       >
-        <TodoCard todo={todo} />
+        <TodoCard todo={todo} onEdit={onEditTodo} />
       </div>
     );
   };
 
   return (
-    <Space vertical className="p-4">
-      <Flex justify="space-between" align="center">
+    <div className="flex h-full min-h-0 flex-col gap-2 p-4">
+      <Flex justify="space-between" align="center" className="shrink-0">
         <Segmented
           options={[
             { label: "All Tasks", value: "all" },
@@ -171,7 +177,7 @@ const TodoList = ({ search }: { search: string }) => {
           }}
         />
       </Flex>
-      <div className="h-137.5 w-full overflow-auto" ref={parentRef}>
+      <div className="min-h-0 flex-1 w-full overflow-auto" ref={parentRef}>
         <div
           className="w-full relative"
           style={{ height: `${todoVitualizer.getTotalSize()}px` }}
@@ -203,7 +209,7 @@ const TodoList = ({ search }: { search: string }) => {
           })}
         </div>
       </div>
-    </Space>
+    </div>
   );
 };
 
