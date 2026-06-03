@@ -14,6 +14,10 @@ export type TodoPage = {
   nextOffset?: number | null;
 };
 
+export type TodoCreateRequest = Omit<Todo, "id" | "order"> & {
+  order?: number;
+};
+
 export type TodoResponse = {
   data: Todo;
 };
