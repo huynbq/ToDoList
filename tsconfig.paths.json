@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      // Can change to something else, that for easier import @app/utils, @app/types
+      // the term is path alias for research
+      "@app/*": ["./src/*"]
+    }
+  }
+}

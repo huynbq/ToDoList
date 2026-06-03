@@ -1,33 +1,34 @@
-import { EllipsisOutlined } from "@ant-design/icons";
-import { Card, Checkbox, Flex, Dropdown, Modal, Tag } from "antd";
-import type { MenuProps } from "antd";
-import { formatDateTime } from "../../utils/format";
-import type { Todo } from "../../types/types";
+import { EllipsisOutlined } from '@ant-design/icons';
+import { Card, Checkbox, Flex, Dropdown, Modal, Tag } from 'antd';
+import type { MenuProps } from 'antd';
+import { formatDateTime } from '../../utils/format';
+import type { Todo } from '../../types/types';
 import {
   useDeleteTodo,
   useToggleStatus,
-} from "../../hooks/queries/useTodoQueries";
+} from '../../hooks/queries/useTodoQueries';
 
 type TodoCardProps = {
   todo: Todo;
   onEdit: (todo: Todo) => void;
 };
 
-const cardActions: MenuProps["items"] = [
+// Feedback: Key should be enum for reuse below with check if condition
+const cardActions: MenuProps['items'] = [
   {
-    label: "Edit",
-    key: "0",
+    label: 'Edit',
+    key: '0',
   },
   {
-    label: "Delete",
+    label: 'Delete',
     danger: true,
-    key: "1",
+    key: '1',
   },
 ];
 
 const CardTitle = ({ todo }: { todo: Todo }) => {
   const toggleStatus = useToggleStatus();
-  const isCompleted = todo.status === "completed";
+  const isCompleted = todo.status === 'completed';
 
   return (
     <Checkbox
@@ -39,7 +40,7 @@ const CardTitle = ({ todo }: { todo: Todo }) => {
       }}
       onClick={(event) => event.stopPropagation()}
     >
-      <h3 className="text-md font-bold">
+      <h3 className='text-md font-bold'>
         {isCompleted ? <s>{todo.title}</s> : todo.title}
       </h3>
     </Checkbox>
@@ -49,19 +50,19 @@ const CardTitle = ({ todo }: { todo: Todo }) => {
 const CardActions = ({ todo, onEdit }: TodoCardProps) => {
   const deleteTodo = useDeleteTodo();
 
-  const handleMenuClick: MenuProps["onClick"] = ({ key, domEvent }) => {
+  const handleMenuClick: MenuProps['onClick'] = ({ key, domEvent }) => {
     domEvent.stopPropagation();
 
-    if (key === "0") {
+    if (key === '0') {
       onEdit(todo);
       return;
     }
 
-    if (key === "1") {
+    if (key === '1') {
       Modal.confirm({
-        title: "Delete task?",
+        title: 'Delete task?',
         content: `This will delete "${todo.title}".`,
-        okText: "Delete",
+        okText: 'Delete',
         okButtonProps: { danger: true },
         onOk: () => deleteTodo.mutateAsync(todo.id),
       });
@@ -71,10 +72,10 @@ const CardActions = ({ todo, onEdit }: TodoCardProps) => {
   return (
     <Dropdown
       menu={{ items: cardActions, onClick: handleMenuClick }}
-      trigger={["click"]}
+      trigger={['click']}
     >
       <EllipsisOutlined
-        className="text-lg font-bold"
+        className='text-lg font-bold'
         onClick={(event) => event.stopPropagation()}
       />
     </Dropdown>
@@ -82,33 +83,41 @@ const CardActions = ({ todo, onEdit }: TodoCardProps) => {
 };
 
 const TodoCard = ({ todo, onEdit }: TodoCardProps) => {
+  const {
+    color,
+    status,
+    description,
+    startDateTime,
+    dueDateTime,
+    reminderDateTime,
+  } = todo;
+
   return (
     <Card
       classNames={{
-        body: "p-2",
+        body: 'p-2',
       }}
       styles={{
         root: {
-          backgroundColor: todo.color,
+          backgroundColor: color,
         },
       }}
     >
       <Flex vertical gap={8}>
-        <Flex justify="space-between" align="center">
+        <Flex justify='space-between' align='center'>
           <CardTitle todo={todo} />
-          <Flex align="center" gap={8}>
-            {todo.status === "overdue" ? <Tag color="error">Overdue</Tag> : null}
+          <Flex align='center' gap={8}>
+            {status === 'overdue' ? <Tag color='error'>Overdue</Tag> : null}
             <CardActions todo={todo} onEdit={onEdit} />
           </Flex>
         </Flex>
-        <p className="text-sm text-stone-500">{todo.description}</p>
-        <p className="text-sm text-stone-800 font-semibold">
-          {formatDateTime(todo.startDateTime)} to{" "}
-          {formatDateTime(todo.dueDateTime)}
+        <p className='text-sm text-stone-500'>{description}</p>
+        <p className='text-sm text-stone-800 font-semibold'>
+          {formatDateTime(startDateTime)} to {formatDateTime(dueDateTime)}
         </p>
-        {todo.reminderDateTime ? (
-          <p className="text-xs text-stone-700">
-            Reminder: {formatDateTime(todo.reminderDateTime)}
+        {reminderDateTime ? (
+          <p className='text-xs text-stone-700'>
+            Reminder: {formatDateTime(reminderDateTime)}
           </p>
         ) : null}
       </Flex>

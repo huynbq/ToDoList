@@ -5,6 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
+// Feedback: Can use more option that lint our project
+// etc: simple-import-sort/imports will help us to re-order the import beauty
 export default defineConfig([
   globalIgnores(['dist']),
   {

@@ -1,7 +1,7 @@
 import { Button, Card, Form, Input, Typography, message } from "antd";
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 
 type AuthFormValues = {
   email: string;

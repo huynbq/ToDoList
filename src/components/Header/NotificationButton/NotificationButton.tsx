@@ -109,6 +109,7 @@ const NotificationButton = () => {
             title={notification.title}
             description={
               <Space direction="vertical" size={0}>
+                {/* Feedback: Can do like {notification.message && <Component /> */}
                 {notification.message ? (
                   <Typography.Text type="secondary">
                     {notification.message}

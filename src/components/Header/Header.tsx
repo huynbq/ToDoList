@@ -1,6 +1,6 @@
 import { Button, Flex, Layout, Space, Typography } from "antd";
 import NotificationButton from "./NotificationButton/NotificationButton";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../auth/useAuth";
 const { Header } = Layout;
 const HeaderComponent = () => {
   const auth = useAuth();

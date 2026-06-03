@@ -5,6 +5,7 @@ import type {
   ReminderNotificationsResponse,
 } from "../types/types";
 
+// Feedback: can create a reuse api for this, see same pattern in notification and todo apis
 export const getUnreadNotifications = async (): Promise<ReminderNotification[]> => {
   const { data } = await apiClient.get<ReminderNotificationsResponse>("/notifications");
   return data.data;

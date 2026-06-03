@@ -1,24 +1,25 @@
-import { FileTextOutlined } from "@ant-design/icons";
-import { Layout } from "antd";
-const { Sider } = Layout;
-import type { MenuProps } from "antd";
-import { Menu } from "antd";
+import { FileTextOutlined } from '@ant-design/icons';
+import { Layout } from 'antd';
+import type { MenuProps } from 'antd';
+import { Menu } from 'antd';
 
-type MenuItem = Required<MenuProps>["items"][number];
+type MenuItem = Required<MenuProps>['items'][number];
+
+const { Sider } = Layout;
 
 const items: MenuItem[] = [
   {
-    key: "sub1",
-    label: "Todo List",
+    key: 'sub1',
+    label: 'Todo List',
     icon: <FileTextOutlined />,
     children: [
       {
-        key: "g1",
-        label: "Item 1",
+        key: 'g1',
+        label: 'Item 1',
       },
       {
-        key: "g2",
-        label: "Item 2",
+        key: 'g2',
+        label: 'Item 2',
       },
     ],
   },
@@ -26,12 +27,12 @@ const items: MenuItem[] = [
 
 const Sidebar = () => {
   return (
-    <Sider className="bg-stone-50">
+    <Sider className='bg-stone-50'>
       <Menu
-        className="h-full bg-stone-50 border-none"
-        defaultSelectedKeys={["1"]}
-        defaultOpenKeys={["sub1"]}
-        mode="inline"
+        className='h-full bg-stone-50 border-none'
+        defaultSelectedKeys={['1']}
+        defaultOpenKeys={['sub1']}
+        mode='inline'
         items={items}
       />
     </Sider>
