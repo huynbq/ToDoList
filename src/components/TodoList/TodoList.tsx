@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import TodoCard from "../TodoCard";
 import { useEditOrder, useGetTodos } from "../../hooks/queries/useTodoQueries";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { Todo } from "../../types/types";
-type TodoStatusFilter = "all" | "completed" | "pending";
+import type { Todo, TodoStatusFilter } from "../../types/types";
 
 const TodoList = ({
   search,
@@ -115,16 +114,18 @@ const TodoList = ({
   };
 
   const TodoRow = ({
-    size,
+    index,
     start,
     todo,
   }: {
-    size: number;
+    index: number;
     start: number;
     todo: Todo;
   }) => {
     return (
       <div
+        ref={todoVitualizer.measureElement}
+        data-index={index}
         data-todo-id={todo.id}
         draggable
         onDragStart={(event) => handleDragStart(event, todo)}
@@ -141,12 +142,13 @@ const TodoList = ({
           top: 0,
           left: 0,
           width: "100%",
-          height: `${size}px`,
           transform: `translateY(${start}px)`,
           cursor: "grab",
         }}
       >
-        <TodoCard todo={todo} onEdit={onEditTodo} />
+        <div className="pb-2">
+          <TodoCard todo={todo} onEdit={onEditTodo} />
+        </div>
       </div>
     );
   };
@@ -159,6 +161,7 @@ const TodoList = ({
             { label: "All Tasks", value: "all" },
             { label: "Completed", value: "completed" },
             { label: "Pending", value: "pending" },
+            { label: "Overdue", value: "overdue" },
           ]}
           value={filter}
           onChange={(value) => {
@@ -183,7 +186,7 @@ const TodoList = ({
               <Skeleton.Node
                 key={index}
                 active
-                className="!h-24 !w-full !rounded-lg"
+                className="h-24 w-full rounded-lg!"
               />
             ))}
           </div>
@@ -212,7 +215,16 @@ const TodoList = ({
                 return (
                   <div
                     key="loader"
+                    ref={todoVitualizer.measureElement}
+                    data-index={virtualItem.index}
                     className="flex h-20 items-center justify-center"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
                   >
                     {hasNextPage ? <Spin /> : null}
                   </div>
@@ -227,7 +239,7 @@ const TodoList = ({
                 <TodoRow
                   key={todo.id}
                   todo={todo}
-                  size={virtualItem.size}
+                  index={virtualItem.index}
                   start={virtualItem.start}
                 />
               );

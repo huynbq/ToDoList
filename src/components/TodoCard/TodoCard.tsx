@@ -1,5 +1,5 @@
 import { EllipsisOutlined } from "@ant-design/icons";
-import { Card, Checkbox, Flex, Dropdown, Modal } from "antd";
+import { Card, Checkbox, Flex, Dropdown, Modal, Tag } from "antd";
 import type { MenuProps } from "antd";
 import { formatDateTime } from "../../utils/format";
 import type { Todo } from "../../types/types";
@@ -96,7 +96,10 @@ const TodoCard = ({ todo, onEdit }: TodoCardProps) => {
       <Flex vertical gap={8}>
         <Flex justify="space-between" align="center">
           <CardTitle todo={todo} />
-          <CardActions todo={todo} onEdit={onEdit} />
+          <Flex align="center" gap={8}>
+            {todo.status === "overdue" ? <Tag color="error">Overdue</Tag> : null}
+            <CardActions todo={todo} onEdit={onEdit} />
+          </Flex>
         </Flex>
         <p className="text-sm text-stone-500">{todo.description}</p>
         <p className="text-sm text-stone-800 font-semibold">

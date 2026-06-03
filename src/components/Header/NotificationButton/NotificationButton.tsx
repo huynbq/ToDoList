@@ -99,7 +99,6 @@ const NotificationButton = () => {
               key="dismiss"
               size="small"
               type="link"
-              loading={markRead.isPending}
               onClick={() => markRead.mutate(notification.id)}
             >
               Dismiss
