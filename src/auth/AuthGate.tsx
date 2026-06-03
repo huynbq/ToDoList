@@ -1,5 +1,6 @@
 import { Button, Card, Form, Input, Typography, message } from "antd";
 import { useState, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import { useAuth } from "./AuthContext";
 
 type AuthFormValues = {
@@ -9,6 +10,7 @@ type AuthFormValues = {
 
 export const AuthGate = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,6 +28,7 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
     try {
       if (mode === "signin") {
         await auth.signIn(values.email, values.password);
+        navigate("/todos", { replace: true });
       } else {
         await auth.signUp(values.email, values.password);
         message.success("Account created. Check your email if confirmation is enabled.");

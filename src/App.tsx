@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Navigate, Routes, Route } from "react-router";
 import routes from "./pages/routes";
 import MainLayout from "./layouts/MainLayout";
 import { AuthGate } from "./auth/AuthGate";
@@ -8,6 +8,7 @@ function App() {
     <AuthGate>
       <Routes>
         <Route element={<MainLayout />}>
+          <Route index element={<Navigate to="/todos" replace />} />
           {routes.map((route) => (
             <Route
               key={route.path}
