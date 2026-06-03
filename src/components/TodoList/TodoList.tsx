@@ -104,14 +104,17 @@ const TodoList = ({
     const nextItems = [...renderedItems];
     const [movedTodo] = nextItems.splice(sourceIndex, 1);
     nextItems.splice(targetIndex, 0, movedTodo);
+    const movedIndex = nextItems.findIndex((todo) => todo.id === sourceTodo.id);
+    const previousTodo = movedIndex > 0 ? nextItems[movedIndex - 1] : null;
+    const nextTodo = movedIndex < nextItems.length - 1 ? nextItems[movedIndex + 1] : null;
 
     setItems(nextItems);
     draggedTodoIdRef.current = null;
 
-    console.log(sourceTodo.id, targetTodo.order);
     editOrder.mutate({
       id: sourceTodo.id,
-      order: targetTodo.order,
+      previousId: previousTodo?.id ?? null,
+      nextId: nextTodo?.id ?? null,
     });
   };
 

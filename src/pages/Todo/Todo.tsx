@@ -69,7 +69,7 @@ const TodoPage = () => {
       startDateTime: values.startDateTime.toISOString(),
       dueDateTime: values.dueDateTime.toISOString(),
       color: values.color,
-      order: editingTodo?.order ?? Date.now(),
+      ...(editingTodo ? { order: editingTodo.order } : {}),
     };
 
     if (editingTodo) {

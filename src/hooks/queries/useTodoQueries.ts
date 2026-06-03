@@ -143,6 +143,7 @@ export const useEditOrder = () => {
     mutationFn: todoApi.editOrder,
     onSuccess: (todo) => {
       queryClient.setQueryData(TODO_KEYS.detail(todo.id), todo);
+      queryClient.invalidateQueries({ queryKey: TODO_KEYS.all });
     },
   });
 };
