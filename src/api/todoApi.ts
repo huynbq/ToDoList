@@ -1,6 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "../constants/api";
-import type { Todo, TodoPage, TodoResponse } from "../types/types";
+import type { Todo, TodoCreateRequest, TodoPage, TodoResponse } from "../types/types";
 
 export const getTodos = async ({
   limit = 10,
@@ -24,7 +24,7 @@ export const getTodos = async ({
   return data;
 };
 
-export const createTodo = async (newTodo: Omit<Todo, "id">): Promise<Todo> => {
+export const createTodo = async (newTodo: TodoCreateRequest): Promise<Todo> => {
   const { data } = await axios.post<TodoResponse>(BASE_URL + "/todos", newTodo);
   return data.data;
 };
@@ -51,13 +51,16 @@ export const toggleStatus = async (id: string): Promise<Todo> => {
 
 export const editOrder = async ({
   id,
-  order,
+  previousId,
+  nextId,
 }: {
   id: string;
-  order: number;
+  previousId?: string | null;
+  nextId?: string | null;
 }): Promise<Todo> => {
-  const { data } = await axios.patch<TodoResponse>(`${BASE_URL}/todos/${id}/order`, {
-    order: order,
+  const { data } = await axios.patch<TodoResponse>(`${BASE_URL}/todos/${id}/reorder`, {
+    previousId,
+    nextId,
   });
   return data.data;
 };
