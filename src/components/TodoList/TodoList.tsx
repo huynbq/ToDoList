@@ -1,10 +1,16 @@
 import { Empty, Flex, Segmented, Skeleton, Spin } from "antd";
-import { AppstoreOutlined, BarsOutlined } from "@ant-design/icons";
-import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import {
+  AppstoreOutlined,
+  BarsOutlined,
+  HolderOutlined,
+} from "@ant-design/icons";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TodoCard from "../TodoCard";
 import { useEditOrder, useGetTodos } from "../../hooks/queries/useTodoQueries";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Todo, TodoStatusFilter } from "../../types/types";
+
+type DropPosition = "before" | "after";
 
 const TodoList = ({
   search,
@@ -30,11 +36,16 @@ const TodoList = ({
     [data],
   );
   const [items, setItems] = useState(todos);
+  const [draggedTodoId, setDraggedTodoId] = useState<string | null>(null);
+  const [dragOverTodoId, setDragOverTodoId] = useState<string | null>(null);
+  const [dropPosition, setDropPosition] = useState<DropPosition>("before");
   const renderedItems = items.length === todos.length ? items : todos;
   const editOrder = useEditOrder();
 
   const parentRef = useRef<HTMLDivElement>(null);
   const draggedTodoIdRef = useRef<string | null>(null);
+  const dragOverTodoIdRef = useRef<string | null>(null);
+  const dropPositionRef = useRef<DropPosition>("before");
   const todoVitualizer = useVirtualizer({
     count: hasNextPage ? todos.length + 1 : todos.length,
     getScrollElement: () => parentRef.current,
@@ -67,19 +78,22 @@ const TodoList = ({
     todoVitualizer.getVirtualItems(),
   ]);
 
-  const handleDragStart = (event: DragEvent<HTMLDivElement>, todo: Todo) => {
-    draggedTodoIdRef.current = todo.id;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", todo.id);
+  const clearDragState = () => {
+    draggedTodoIdRef.current = null;
+    dragOverTodoIdRef.current = null;
+    dropPositionRef.current = "before";
+    setDraggedTodoId(null);
+    setDragOverTodoId(null);
+    setDropPosition("before");
   };
 
-  const handleDrop = (event: DragEvent<HTMLDivElement>, targetTodo: Todo) => {
-    event.preventDefault();
-
-    const sourceTodoId =
-      draggedTodoIdRef.current || event.dataTransfer.getData("text/plain");
-
-    if (!sourceTodoId || sourceTodoId === targetTodo.id) {
+  const reorderTodo = (
+    sourceTodoId: string | null,
+    targetTodoId: string | null,
+    position: DropPosition,
+  ) => {
+    if (!sourceTodoId || !targetTodoId || sourceTodoId === targetTodoId) {
+      clearDragState();
       return;
     }
 
@@ -87,24 +101,33 @@ const TodoList = ({
       (todo) => todo.id === sourceTodoId,
     );
     const targetIndex = renderedItems.findIndex(
-      (todo) => todo.id === targetTodo.id,
+      (todo) => todo.id === targetTodoId,
     );
 
     if (sourceIndex === -1 || targetIndex === -1) {
+      clearDragState();
       return;
     }
 
     const sourceTodo = renderedItems[sourceIndex];
     const nextItems = [...renderedItems];
     const [movedTodo] = nextItems.splice(sourceIndex, 1);
-    nextItems.splice(targetIndex, 0, movedTodo);
+    const insertIndex = targetIndex + (position === "after" ? 1 : 0);
+    const adjustedInsertIndex = sourceIndex < insertIndex ? insertIndex - 1 : insertIndex;
+
+    if (sourceIndex === adjustedInsertIndex) {
+      clearDragState();
+      return;
+    }
+
+    nextItems.splice(adjustedInsertIndex, 0, movedTodo);
     const movedIndex = nextItems.findIndex((todo) => todo.id === sourceTodo.id);
     const previousTodo = movedIndex > 0 ? nextItems[movedIndex - 1] : null;
     const nextTodo =
       movedIndex < nextItems.length - 1 ? nextItems[movedIndex + 1] : null;
 
     setItems(nextItems);
-    draggedTodoIdRef.current = null;
+    clearDragState();
 
     editOrder.mutate({
       id: sourceTodo.id,
@@ -112,6 +135,87 @@ const TodoList = ({
       nextId: nextTodo?.id ?? null,
     });
   };
+
+  const startPointerDrag = (todo: Todo) => {
+    draggedTodoIdRef.current = todo.id;
+    dragOverTodoIdRef.current = null;
+    dropPositionRef.current = "before";
+    setDraggedTodoId(todo.id);
+    setDragOverTodoId(null);
+    setDropPosition("before");
+  };
+
+  useEffect(() => {
+    if (!draggedTodoId) {
+      return;
+    }
+
+    const previousCursor = document.body.style.cursor;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.cursor = "grabbing";
+    document.body.style.userSelect = "none";
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const scrollElement = parentRef.current;
+
+      if (scrollElement) {
+        const rect = scrollElement.getBoundingClientRect();
+        const edgeSize = 48;
+
+        if (event.clientY < rect.top + edgeSize) {
+          scrollElement.scrollTop -= 12;
+        } else if (event.clientY > rect.bottom - edgeSize) {
+          scrollElement.scrollTop += 12;
+        }
+      }
+
+      const targetElement = document.elementFromPoint(
+        event.clientX,
+        event.clientY,
+      ) as HTMLElement | null;
+      const targetRow = targetElement?.closest("[data-todo-id]") as
+        | HTMLElement
+        | null;
+      const targetTodoId = targetRow?.dataset.todoId ?? null;
+
+      if (!targetRow || !targetTodoId || targetTodoId === draggedTodoIdRef.current) {
+        dragOverTodoIdRef.current = null;
+        setDragOverTodoId(null);
+        return;
+      }
+
+      const rowRect = targetRow.getBoundingClientRect();
+      const nextPosition =
+        event.clientY < rowRect.top + rowRect.height / 2 ? "before" : "after";
+
+      dragOverTodoIdRef.current = targetTodoId;
+      dropPositionRef.current = nextPosition;
+      setDragOverTodoId(targetTodoId);
+      setDropPosition(nextPosition);
+    };
+
+    const handlePointerUp = () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+      reorderTodo(
+        draggedTodoIdRef.current,
+        dragOverTodoIdRef.current,
+        dropPositionRef.current,
+      );
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+    window.addEventListener("pointercancel", clearDragState, { once: true });
+
+    return () => {
+      document.body.style.cursor = previousCursor;
+      document.body.style.userSelect = previousUserSelect;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", clearDragState);
+    };
+  }, [draggedTodoId, renderedItems]);
 
   const TodoRow = ({
     index,
@@ -122,32 +226,64 @@ const TodoList = ({
     start: number;
     todo: Todo;
   }) => {
+    const isDragging = draggedTodoId === todo.id;
+    const isDropTarget = dragOverTodoId === todo.id && !isDragging;
+    const lineStyle =
+      dropPosition === "before"
+        ? { top: "-5px" }
+        : { bottom: "5px" };
+
     return (
       <div
         ref={todoVitualizer.measureElement}
         data-index={index}
         data-todo-id={todo.id}
-        draggable
-        onDragStart={(event) => handleDragStart(event, todo)}
-        onDragOver={(event) => {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "move";
-        }}
-        onDrop={(event) => handleDrop(event, todo)}
-        onDragEnd={() => {
-          draggedTodoIdRef.current = null;
-        }}
+        className="relative"
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           width: "100%",
           transform: `translateY(${start}px)`,
-          cursor: "grab",
         }}
       >
-        <div className="pb-2">
-          <TodoCard todo={todo} onEdit={onEditTodo} />
+        {isDropTarget ? (
+          <div
+            className="pointer-events-none absolute left-10 right-2 z-20 flex items-center"
+            style={lineStyle}
+          >
+            <span className="h-2 w-2 rounded-full bg-blue-500 shadow-sm" />
+            <span className="h-0.5 flex-1 rounded-full bg-blue-500 shadow-sm" />
+          </div>
+        ) : null}
+        <div
+          className={`group flex gap-2 pb-2 transition duration-150 ease-out ${
+            isDragging ? "scale-[0.98] opacity-35" : ""
+          }`}
+        >
+          <div
+            className={`flex w-8 shrink-0 items-stretch justify-center rounded-xl border border-dashed bg-white/80 transition ${
+              isDragging
+                ? "border-blue-300 text-blue-500 opacity-100"
+                : "border-stone-200 text-stone-400 opacity-60 group-hover:opacity-100"
+            }`}
+          >
+            <div
+              role="button"
+              aria-label={`Drag ${todo.title}`}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                startPointerDrag(todo);
+              }}
+              className="flex h-full w-full cursor-grab items-center justify-center rounded-xl text-lg active:cursor-grabbing"
+            >
+              <HolderOutlined />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1 rounded-xl transition">
+            <TodoCard todo={todo} onEdit={onEditTodo} />
+          </div>
         </div>
       </div>
     );
@@ -179,7 +315,10 @@ const TodoList = ({
           }}
         />
       </Flex>
-      <div className="min-h-0 flex-1 w-full overflow-auto" ref={parentRef}>
+      <div
+        className="min-h-0 flex-1 w-full overflow-auto"
+        ref={parentRef}
+      >
         {isPending ? (
           <div className="space-y-3 p-2">
             {Array.from({ length: 6 }).map((_, index) => (
