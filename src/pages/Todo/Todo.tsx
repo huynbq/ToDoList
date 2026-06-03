@@ -3,13 +3,13 @@ import { Input, Space, Button, Flex, Modal, Form, Select, DatePicker, ColorPicke
 import TodoList from "../../components/TodoList";
 import { useEffect, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import type { Todo } from "../../types/types";
+import type { Todo, TodoWriteStatus } from "../../types/types";
 import { useCreateTodo, useEditTodo } from "../../hooks/queries/useTodoQueries";
 
 type TodoFormValues = {
   title: string;
   description: string;
-  status: "pending" | "completed";
+  status?: TodoWriteStatus;
   startDateTime: Dayjs;
   dueDateTime: Dayjs;
   reminderDateTime?: Dayjs | null;
@@ -54,7 +54,7 @@ const TodoPage = () => {
     form.setFieldsValue({
       title: todo.title,
       description: todo.description,
-      status: todo.status,
+      status: todo.status === "overdue" ? "pending" : todo.status,
       startDateTime: dayjs(todo.startDateTime),
       dueDateTime: dayjs(todo.dueDateTime),
       reminderDateTime: todo.reminderDateTime ? dayjs(todo.reminderDateTime) : null,
@@ -65,10 +65,13 @@ const TodoPage = () => {
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
+    const status: TodoWriteStatus = editingTodo
+      ? values.status ?? (editingTodo.status === "completed" ? "completed" : "pending")
+      : "pending";
     const payload = {
       title: values.title,
       description: values.description,
-      status: values.status,
+      status,
       startDateTime: values.startDateTime.toISOString(),
       dueDateTime: values.dueDateTime.toISOString(),
       reminderDateTime: values.reminderDateTime?.toISOString() ?? null,
@@ -130,35 +133,52 @@ const TodoPage = () => {
           <Form.Item name="description" label="Description" rules={[{ required: true }]}>
             <Input.TextArea rows={3} />
           </Form.Item>
-          <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { label: "Pending", value: "pending" },
-                { label: "Completed", value: "completed" },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="startDateTime" label="Start" rules={[{ required: true }]}>
-            <DatePicker showTime className="w-full" />
-          </Form.Item>
-          <Form.Item name="dueDateTime" label="Due" rules={[{ required: true }]}>
-            <DatePicker showTime className="w-full" />
-          </Form.Item>
-          <Form.Item name="reminderDateTime" label="Reminder">
-            <DatePicker showTime allowClear className="w-full" />
-          </Form.Item>
-          <Form.Item
-            name="color"
-            label="Color"
-            rules={[{ required: true }]}
-            getValueFromEvent={(color) => color.toHexString()}
-          >
-            <ColorPicker
-              showText={(color) => color.toHexString()}
-              disabledAlpha
-              format="hex"
-            />
-          </Form.Item>
+          {editingTodo ? (
+            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+              <Select
+                options={[
+                  { label: "Pending", value: "pending" },
+                  { label: "Completed", value: "completed" },
+                ]}
+              />
+            </Form.Item>
+          ) : null}
+          <Flex gap={12}>
+            <Form.Item
+              name="startDateTime"
+              label="Start"
+              rules={[{ required: true }]}
+              className="flex-1"
+            >
+              <DatePicker showTime className="w-full" />
+            </Form.Item>
+            <Form.Item
+              name="dueDateTime"
+              label="Due"
+              rules={[{ required: true }]}
+              className="flex-1"
+            >
+              <DatePicker showTime className="w-full" />
+            </Form.Item>
+          </Flex>
+          <Flex gap={12} align="flex-start">
+            <Form.Item name="reminderDateTime" label="Reminder" className="flex-1">
+              <DatePicker showTime allowClear className="w-full" />
+            </Form.Item>
+            <Form.Item
+              name="color"
+              label="Color"
+              rules={[{ required: true }]}
+              getValueFromEvent={(color) => color.toHexString()}
+              className="flex-1"
+            >
+              <ColorPicker
+                showText={(color) => color.toHexString()}
+                disabledAlpha
+                format="hex"
+              />
+            </Form.Item>
+          </Flex>
         </Form>
       </Modal>
     </Flex>
